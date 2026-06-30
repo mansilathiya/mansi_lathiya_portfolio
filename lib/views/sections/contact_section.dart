@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mansi_lathiya_portfolio/services/emailjs_service.dart';
 import 'package:mansi_lathiya_portfolio/utils/app_colors.dart';
 import 'package:mansi_lathiya_portfolio/utils/app_constants.dart';
 import 'package:mansi_lathiya_portfolio/utils/portfolio_data.dart';
@@ -45,57 +46,43 @@ class _ContactSectionState extends State<ContactSection> {
     });
 
     try {
-      final subject = Uri.encodeComponent(_subjectController.text.trim());
-
-      final body = Uri.encodeComponent('''
-${_nameController.text.trim()}
-${_emailController.text.trim()}
-
-${_messageController.text.trim()}
-''');
-
-      final uri = Uri.parse(
-        'mailto:${PortfolioData.email}'
-        '?subject=$subject'
-        '&body=$body',
+      bool success = await EmailJSService.sendEmail(
+        name: _nameController.text,
+        email: _emailController.text,
+        subject: _subjectController.text,
+        message: _messageController.text,
       );
-
-      log('Mail URI: $uri');
-
-      final launched = await launchUrl(uri, mode: LaunchMode.platformDefault);
-
-      if (!launched) {
-        throw Exception('Unable to open the email application.');
-      }
 
       if (!mounted) return;
 
-      _formKey.currentState?.reset();
-
-      _nameController.clear();
-      _emailController.clear();
-      _subjectController.clear();
-      _messageController.clear();
-
-      setState(() {
-        _sending = false;
-        _sent = true;
-      });
-
-      Future.delayed(AppConstants.duration6Second, () {
-        if (mounted) {
-          setState(() => _sent = false);
-        }
-      });
+      if (success) {
+        _formKey.currentState?.reset();
+        _nameController.clear();
+        _emailController.clear();
+        _subjectController.clear();
+        _messageController.clear();
+        setState(() {
+          _sending = false;
+          _sent = true;
+        });
+        Future.delayed(AppConstants.duration6Second, () {
+          if (mounted) setState(() => _sent = false);
+        });
+      } else {
+        setState(() => _sending = false);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Failed to send email')));
+      }
     } catch (e, s) {
       log('sendEmail Error: $e');
       log('StackTrace: $s');
-
       if (mounted) {
         setState(() => _sending = false);
-
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Unable to open the email application.')),
+          const SnackBar(
+            content: Text('Unable to open the email application.'),
+          ),
         );
       }
     }
@@ -439,7 +426,8 @@ class _ContactFormCard extends StatelessWidget {
                     ),
                     Flexible(
                       child: Text(
-                        "Mail client opened! Message ready to send.",
+                        // "Mail client opened! Message ready to send.",
+                        "Email sent successfully!",
                         style: GoogleFonts.poppins(
                           color: Colors.green,
                           fontWeight: FontWeight.w500,
