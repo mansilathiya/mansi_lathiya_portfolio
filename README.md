@@ -6,7 +6,7 @@ Welcome to the GitHub repository for **Mansi Lathiya's Portfolio**. This reposit
 
 ## 🌐 Live Website
 
-> _Coming soon — deploy link will be updated here_
+You can visit the live portfolio website at (https://mansi-lathiya-portfolio.vercel.app/)
 
 ---
 

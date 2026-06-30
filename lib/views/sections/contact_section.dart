@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -34,42 +35,69 @@ class _ContactSectionState extends State<ContactSection> {
     super.dispose();
   }
 
-  Future<void> _sendMessage() async {
+  Future<void> sendEmail() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() => _sending = true);
-    final body =
-        '''
-          Name: ${_nameController.text.trim().toString()}
-          Email: ${_emailController.text.trim().toString()}
-          Message:
-          ${_messageController.text.trim().toString()}
-        ''';
-    final emailUri = Uri(
-      scheme: "mailto",
-      path: PortfolioData.email,
-      queryParameters: {
-        "subject": _subjectController.text.trim().toString(),
-        "body": body,
-      },
-    );
+
+    FocusScope.of(context).unfocus();
+
+    setState(() {
+      _sending = true;
+    });
+
     try {
-      await launchUrl(emailUri, mode: LaunchMode.platformDefault);
-      if (mounted) {
-        setState(() {
-          _sending = false;
-          _sent = true;
-        });
-        _formKey.currentState!.reset();
-        _nameController.clear();
-        _emailController.clear();
-        _subjectController.clear();
-        _messageController.clear();
-        Future.delayed(AppConstants.duration6Second, () {
-          if (mounted) setState(() => _sent = false);
-        });
+      final subject = Uri.encodeComponent(_subjectController.text.trim());
+
+      final body = Uri.encodeComponent('''
+${_nameController.text.trim()}
+${_emailController.text.trim()}
+
+${_messageController.text.trim()}
+''');
+
+      final uri = Uri.parse(
+        'mailto:${PortfolioData.email}'
+        '?subject=$subject'
+        '&body=$body',
+      );
+
+      log('Mail URI: $uri');
+
+      final launched = await launchUrl(uri, mode: LaunchMode.platformDefault);
+
+      if (!launched) {
+        throw Exception('Unable to open the email application.');
       }
-    } catch (_) {
-      if (mounted) setState(() => _sending = false);
+
+      if (!mounted) return;
+
+      _formKey.currentState?.reset();
+
+      _nameController.clear();
+      _emailController.clear();
+      _subjectController.clear();
+      _messageController.clear();
+
+      setState(() {
+        _sending = false;
+        _sent = true;
+      });
+
+      Future.delayed(AppConstants.duration6Second, () {
+        if (mounted) {
+          setState(() => _sent = false);
+        }
+      });
+    } catch (e, s) {
+      log('sendEmail Error: $e');
+      log('StackTrace: $s');
+
+      if (mounted) {
+        setState(() => _sending = false);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Unable to open the email application.')),
+        );
+      }
     }
   }
 
@@ -110,7 +138,7 @@ class _ContactSectionState extends State<ContactSection> {
                           messageController: _messageController,
                           sending: _sending,
                           sent: _sent,
-                          onSend: _sendMessage,
+                          onSend: sendEmail,
                         ),
                       ],
                     )
@@ -133,7 +161,7 @@ class _ContactSectionState extends State<ContactSection> {
                             messageController: _messageController,
                             sending: _sending,
                             sent: _sent,
-                            onSend: _sendMessage,
+                            onSend: sendEmail,
                           ),
                         ),
                       ],
