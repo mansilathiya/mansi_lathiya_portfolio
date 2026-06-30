@@ -17,7 +17,7 @@ class EmailJSService {
     final response = await http.post(
       url,
       headers: {
-        'origin': 'http://localhost',
+        'origin': 'https://mansi-lathiya-portfolio.vercel.app',
         'Content-Type': 'application/json',
       },
       body: jsonEncode({
