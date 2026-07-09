@@ -21,7 +21,7 @@ class PortfolioData {
   static const projectsCompleted = "15+";
   // static const totalCompanies = "4";
   static const resumeUrl =
-      "https://drive.google.com/file/d/1T3F4e4DVtLorn9H-ruJ_48IDGAvoRKxb/view?usp=sharing";
+      "https://drive.google.com/file/d/1NL_f4pdg-NycEQ7V1Xwz-cKOb1n8sF5j/view?usp=drive_link";
 
   static const sectionsList = [
     "Home",
